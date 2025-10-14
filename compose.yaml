@@ -1,0 +1,7 @@
+﻿services:
+  bookstorageegorkina:
+    image: bookstorageegorkina
+    build:
+      context: .
+      dockerfile: BookStorageEgorkina/Dockerfile
+

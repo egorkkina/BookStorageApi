@@ -1,0 +1,6 @@
+@BookStorageEgorkina_HostAddress = http://localhost:5234
+
+GET {{BookStorageEgorkina_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
