@@ -17,53 +17,110 @@ public class BookRepository : IBookRepository
 
     public async Task<List<Book>> GetBook()
     {
-        var bookEntities = await _context.Books
+        var books = await _context.Books
+            .Include(b => b.BookAuthors)
+            .ThenInclude(ba => ba.Author)
             .AsNoTracking()
             .ToListAsync();
 
-        var books = bookEntities
-            .Select(b => Book.Create(b.Id, b.Title, b.Description, b.Author, b.Price).book)
-            .ToList();
-    
-        return books;
+        return books.Select(b =>
+        {
+            var (book, _) = Book.Create(b.Id, b.Title, b.Description, b.Price);
+            foreach (var ba in b.BookAuthors)
+            {
+                var (author, _) = Author.Create(ba.AuthorId, ba.Author.Name);
+                book.AddAuthor(author);
+            }
+            return book;
+        }).ToList();
     }
     
-    public async Task<Guid> CreateBook(Book book)
+    public async Task<Guid> CreateBook(Book book, List<Author> authors)
     {
         var bookEntity = new BookEntity
         {
             Id = book.Id,
             Title = book.Title,
             Description = book.Description,
-            Author = book.Author,
-            Price = book.Price
+            Price = book.Price,
         };
-        
+
+        foreach (var author in authors)
+        {
+            var existingAuthor = await _context.Authors.FindAsync(author.Id);
+            if (existingAuthor == null)
+            {
+                existingAuthor = new AuthorEntity { Id = author.Id, Name = author.Name };
+                await _context.Authors.AddAsync(existingAuthor);
+            }
+
+            bookEntity.BookAuthors.Add(new BookAuthorEntity
+            {
+                Book = bookEntity,
+                Author = existingAuthor
+            });
+        }
+
         await _context.Books.AddAsync(bookEntity);
         await _context.SaveChangesAsync();
-
         return bookEntity.Id;
     }
 
-    public async Task<Guid> UpdateBook(Guid id, string title, string description, string author, decimal price)
+    public async Task<Guid> UpdateBook(Guid id, string title, string description, decimal price, List<Author> authors)
     {
-        await _context.Books
-            .Where(b => b.Id == id)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(b => b.Title, title)
-                .SetProperty(b => b.Description, description)
-                .SetProperty(b => b.Author, author)
-                .SetProperty(b => b.Price, price));
+        var bookEntity = await _context.Books
+            .Include(b => b.BookAuthors)
+            .ThenInclude(ba => ba.Author)
+            .FirstOrDefaultAsync(b => b.Id == id);
         
-        return id;
+        bookEntity.Title = title;
+        bookEntity.Description = description;
+        bookEntity.Price = price;
+
+        var oldAuthors = bookEntity.BookAuthors.ToList();
+
+        bookEntity.BookAuthors.Clear();
+
+        foreach (var author in authors)
+        {
+            var existingAuthor = await _context.Authors.FindAsync(author.Id);
+            if (existingAuthor == null)
+            {
+                existingAuthor = new AuthorEntity { Id = author.Id, Name = author.Name };
+                await _context.Authors.AddAsync(existingAuthor);
+            }
+
+            bookEntity.BookAuthors.Add(new BookAuthorEntity
+            {
+                BookId = bookEntity.Id,
+                AuthorId = existingAuthor.Id
+            });
+        }
+
+        await _context.SaveChangesAsync();
+
+        foreach (var oldAuthor in oldAuthors)
+        {
+            var isUsed = await _context.BookAuthors
+                .AnyAsync(ba => ba.AuthorId == oldAuthor.AuthorId);
+            if (!isUsed)
+            {
+                var authorEntity = await _context.Authors.FindAsync(oldAuthor.AuthorId);
+                if (authorEntity != null)
+                    _context.Authors.Remove(authorEntity);
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return bookEntity.Id;
     }
 
     public async Task<Guid> DeleteBook(Guid id)
     {
-        await _context.Books
-            .Where(b => b.Id == id)
-            .ExecuteDeleteAsync();
-        
+        var bookEntity = await _context.Books.FindAsync(id);
+
+        _context.Books.Remove(bookEntity);
+        await _context.SaveChangesAsync();
         return id;
     }
 }

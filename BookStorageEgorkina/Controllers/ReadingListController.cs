@@ -71,7 +71,6 @@ public class ReadingListController : ControllerBase
     {
         try
         {
-            // Создаем список чтения через фабричный метод
             var (readingList, error) = ReadingList.Create(
                 Guid.NewGuid(),
                 request.ReadingListName,
@@ -82,21 +81,11 @@ public class ReadingListController : ControllerBase
             if (!string.IsNullOrEmpty(error))
                 return BadRequest(error);
             
-            if (request.BookIds != null && request.BookIds.Any())
-            {
-                var field = typeof(ReadingList).GetField("_bookIds", 
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-                if (field != null)
-                {
-                    var bookIdsList = (List<Guid>)field.GetValue(readingList)!;
-                    bookIdsList.AddRange(request.BookIds);
-                }
-            }
+            if (request.BookIds is { Count: > 0 })
+                readingList.AddBooks(request.BookIds);
 
-            // Используем метод сервиса
-            var readingListId = await _readingListService.CreateReadingList(readingList);
-        
-            return Ok(readingListId);
+            var id = await _readingListService.CreateReadingList(readingList);
+            return Ok(id);
         }
         catch (Exception ex)
         {
@@ -186,7 +175,8 @@ public class ReadingListController : ControllerBase
             var books = await _readingListService.GetBooksInReadingList(readingListId);
 
             var response = books
-                .Select(b => new BooksResponse(b.Id, b.Title, b.Description, b.Author, b.Price));
+                .Select(b => new BooksResponse(b.Id, b.Title, b.Description, b.Authors.Select(a => a.Name).ToList()
+                    , b.Price));
             
             return Ok(response);
         }
@@ -228,7 +218,6 @@ public class ReadingListController : ControllerBase
     [HttpGet("admin/reports")]
     public async Task<ActionResult> GetAdminReports()
     {
-        // Сводные отчеты только для админов
         var allLists = await _readingListService.GetAllReadingLists();
         var publicListsCount = allLists.Count(rl => rl.IsPublic);
         var privateListsCount = allLists.Count(rl => !rl.IsPublic);

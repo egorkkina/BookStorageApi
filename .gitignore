@@ -12,9 +12,13 @@ out/
 
 # Rider
 .idea/
+release/
 
 # ASP.NET Core
 appsettings.Development.json
+
+# Игнорировать docker compose файлы
+compose*.yaml
 
 # NuGet
 *.nupkg
@@ -27,3 +31,4 @@ packages/
 # OS
 .DS_Store
 bookstore.db
+

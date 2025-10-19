@@ -29,5 +29,30 @@ public class ReadingList
         
         return (list, error);
     }
+    
+    public void AddBook(Guid bookId)
+    {
+        if (_bookIds.Contains(bookId))
+            throw new InvalidOperationException("This book is already on my reading list.");
+        
+        _bookIds.Add(bookId);
+    }
+
+    public void AddBooks(IEnumerable<Guid> bookIds)
+    {
+        foreach (var id in bookIds)
+        {
+            if (!_bookIds.Contains(id))
+                _bookIds.Add(id);
+        }
+    }
+    
+    public void RemoveBook(Guid bookId)
+    {
+        if (!_bookIds.Remove(bookId))
+            throw new KeyNotFoundException("The book was not found in the reading list.");
+    }
+
+    public bool ContainsBook(Guid bookId) => _bookIds.Contains(bookId);
 
 }

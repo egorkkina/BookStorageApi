@@ -56,7 +56,7 @@ public class AnalyticsController : ControllerBase
 
         return Ok(new
         {
-            Book = new { book.Id, book.Title, book.Author },
+            Book = new { book.Id, book.Title, book.Authors },
             FoundInLists = result
         });
     }
@@ -96,7 +96,7 @@ public class AnalyticsController : ControllerBase
             {
                 book.Id,
                 book.Title,
-                book.Author,
+                book.Authors,
                 AverageRating = reviews
                     .Where(r => r.BookId == book.Id)
                     .Select(r => r.Rating)

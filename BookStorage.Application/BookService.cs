@@ -28,16 +28,14 @@ public class BookService : IBookService
         if (string.IsNullOrWhiteSpace(book.Title))
             throw new ArgumentException("Title is required");
 
-        if (string.IsNullOrWhiteSpace(book.Author))
-            throw new ArgumentException("Author is required");
-
         if (book.Price < 0)
             throw new ArgumentException("Price cannot be negative");
 
-        return await _bookRepository.CreateBook(book);
+        var authors = book.Authors ?? new List<Author>();
+        return await _bookRepository.CreateBook(book, authors);
     }
 
-    public async Task<Guid> UpdateBooks(Guid id, string title, string description, string author, decimal price)
+    public async Task<Guid> UpdateBooks(Guid id, string title, string description, List<Author>? authors, decimal price)
     {
         var existingBook = await GetBookById(id);
         if (existingBook == null)
@@ -46,13 +44,12 @@ public class BookService : IBookService
         if (string.IsNullOrWhiteSpace(title))
             throw new ArgumentException("Title is required");
 
-        if (string.IsNullOrWhiteSpace(author))
-            throw new ArgumentException("Author is required");
-
         if (price < 0)
             throw new ArgumentException("Price cannot be negative");
+        
+        authors ??= new List<Author>();
 
-        return await _bookRepository.UpdateBook(id, title, description, author, price);
+        return await _bookRepository.UpdateBook(id, title, description, price, authors);
     }
 
     public async Task<Guid> DeleteBooks(Guid id)

@@ -24,7 +24,14 @@ public class BooksController : ControllerBase
         var books = await _bookService.GetAllBooks();
 
         var response = books
-            .Select(b => new BooksResponse(b.Id, b.Title, b.Description, b.Author, b.Price));
+            .Select(b => new BooksResponse(
+                b.Id,
+                b.Title,
+                b.Description,
+                b.Authors.Select(a => a.Name).ToList(),
+                b.Price
+            ))
+            .ToList();
         
         return Ok(response);
     }
@@ -32,33 +39,36 @@ public class BooksController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<Guid>> GetBookById(Guid id)
     {
-        var books = await _bookService.GetAllBooks();
-        
-        var book = books.FirstOrDefault(b => b.Id == id);
+        var book = await _bookService.GetBookById(id);
         if (book == null)
             return NotFound($"Book with ID {id} not found");
 
-        return Ok(book);
+        var response = new BooksResponse(
+            book.Id,
+            book.Title,
+            book.Description,
+            book.Authors.Select(a => a.Name).ToList(),
+            book.Price
+        );
+
+        return Ok(response);
     }
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult<Guid>> Create([FromBody] BooksRequest request)
     {
-        var (book, error) = Book.Create(
-            Guid.NewGuid(),
-            request.Title,
-            request.Description,
-            request.Author,
-            request.Price);
-
+        var (book, error) = Book.Create(Guid.NewGuid(), request.Title, request.Description, request.Price);
         if (!string.IsNullOrEmpty(error))
-        {
             return BadRequest(error);
-        }
+
+        var authors = request.Authors?.Select(a => Author.Create(Guid.NewGuid(), a).author).ToList() 
+                      ?? new List<Author>();
+
+        foreach (var author in authors)
+            book.AddAuthor(author);
 
         var bookId = await _bookService.CreateBooks(book);
-        
         return Ok(bookId);
     }
 
@@ -68,9 +78,10 @@ public class BooksController : ControllerBase
     {
         try
         {
-            var bookId =
-                await _bookService.UpdateBooks(id, request.Title, request.Description, request.Author, request.Price);
+            var authors = request.Authors?.Select(a => Author.Create(Guid.NewGuid(), a).author).ToList() 
+                          ?? new List<Author>();
 
+            var bookId = await _bookService.UpdateBooks(id, request.Title, request.Description, authors, request.Price);
             return Ok(bookId);
         }
         catch (KeyNotFoundException ex)
@@ -81,7 +92,6 @@ public class BooksController : ControllerBase
         {
             return BadRequest(ex.Message);
         }
-        
     }
 
     [Authorize(Roles = "Admin")]
@@ -90,7 +100,8 @@ public class BooksController : ControllerBase
     {
         try
         {
-            return Ok(await _bookService.DeleteBooks(id));
+            await _bookService.DeleteBooks(id);
+            return NoContent();
         }
         catch (KeyNotFoundException ex)
         {
@@ -102,14 +113,20 @@ public class BooksController : ControllerBase
     public async Task<ActionResult<List<BooksResponse>>> GetBooksByAuthor(string author)
     {
         var books = await _bookService.GetAllBooks();
-        
-        var bookByAuthor = books
-            .Where(a => a.Author.Contains(author, StringComparison.OrdinalIgnoreCase))
-            .Select(a => new BooksResponse(a.Id, a.Title, a.Description, a.Author, a.Price))
-            .OrderBy(a => a.Author)
+
+        var filtered = books
+            .Where(b => b.Authors.Any(a => a.Name.Contains(author, StringComparison.OrdinalIgnoreCase)))
+            .Select(b => new BooksResponse(
+                b.Id,
+                b.Title,
+                b.Description,
+                b.Authors.Select(a => a.Name).ToList(),
+                b.Price
+            ))
+            .OrderBy(b => b.Authors.Count > 0 ? b.Authors[0] : "")
             .ToList();
 
-        return Ok(bookByAuthor);
+        return Ok(filtered);
     }
     
 }

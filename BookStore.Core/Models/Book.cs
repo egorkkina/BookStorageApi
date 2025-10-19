@@ -4,42 +4,40 @@ public class Book
 {
     public const int MAX_LENGTH_TITLE = 200;
     public const int MAX_LENGTH_DESCRIPTION = 1000;
-    public const int MAX_LENGTH_AUTHOR = 50;
     
-    private Book(Guid id, string title, string description, string author, decimal price)
+    private Book(Guid id, string title, string description, decimal price)
     {
         Id = id;
         Title = title;
         Description = description;
-        Author = author;
+        Authors = new List<Author>();
         Price = price;
     }
     
     public Guid Id { get; }
     public string Title { get; } = string.Empty;
-    public string Author { get; } = string.Empty;
+    public List<Author> Authors { get; } = new();
     public string Description { get; } = string.Empty;
     public decimal Price { get; }
 
-    public static (Book book, string Error) Create(Guid id, string title, string description, string author,
-        decimal price)
+    public static (Book book, string Error) Create(Guid id, string title, string description, decimal price)
     {
         var error = string.Empty;
-
-        if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(author) ||
-            price <= 0)
-        {
-            error = "string not be is empty";
-        }
-
-        if (title.Length > MAX_LENGTH_TITLE || description.Length > MAX_LENGTH_DESCRIPTION ||
-            author.Length > MAX_LENGTH_AUTHOR)
-        {
-            error = "string is too long";
-        }
         
-        var book = new Book(id, title, description, author, price);
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(description) || price <= 0)
+            error = "Title, description must not be empty and price > 0";
+
+        if (title.Length > MAX_LENGTH_TITLE || description.Length > MAX_LENGTH_DESCRIPTION)
+            error = "Title or description too long";
+        
+        var book = new Book(id, title, description, price);
         
         return (book, error);
+    }
+    
+    public void AddAuthor(Author author)
+    {
+        if (!Authors.Any(a => a.Id == author.Id))
+            Authors.Add(author);
     }
 }

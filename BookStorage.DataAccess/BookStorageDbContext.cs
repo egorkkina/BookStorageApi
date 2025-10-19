@@ -10,6 +10,8 @@ public class BookStorageDbContext : DbContext
     {
     }
     public DbSet<BookEntity> Books { get; set; }
+    public DbSet<AuthorEntity> Authors { get; set; }
+    public DbSet<BookAuthorEntity> BookAuthors { get; set; }
     public DbSet<ReviewEntity> Reviews { get; set; }
     public DbSet<UserEntity> Users { get; set; }
     public DbSet<ReadingListEntity> ReadingLists { get; set; }
@@ -18,6 +20,8 @@ public class BookStorageDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new BookConfigurations());
+        modelBuilder.ApplyConfiguration(new AuthorConfiguration());
+        modelBuilder.ApplyConfiguration(new BookAuthorConfiguration());
         modelBuilder.ApplyConfiguration(new ReviewConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new ReadingListConfiguration());

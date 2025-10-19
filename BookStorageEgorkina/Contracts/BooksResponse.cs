@@ -4,7 +4,7 @@ public record BooksResponse(
     Guid Id,
     string Title,
     string Description,
-    string Author,
+    List<string> Authors,
     decimal Price
     );
     

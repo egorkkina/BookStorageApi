@@ -2,6 +2,7 @@ using BookStorage.DataAccess.Entites;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using BookStore.Core.Models;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BookStorage.DataAccess.Configurations;
 
@@ -15,9 +16,10 @@ public class BookConfigurations : IEntityTypeConfiguration<BookEntity>
             .HasMaxLength(Book.MAX_LENGTH_TITLE)
             .IsRequired();
         
-        builder.Property(x => x.Author)
-            .HasMaxLength(Book.MAX_LENGTH_AUTHOR)
-            .IsRequired();
+        builder
+            .HasMany(b => b.BookAuthors)
+            .WithOne(ba => ba.Book)
+            .HasForeignKey(ba => ba.BookId);
         
         builder.Property(x => x.Description)
             .HasMaxLength(Book.MAX_LENGTH_DESCRIPTION);
