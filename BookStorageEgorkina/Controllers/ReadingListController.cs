@@ -72,7 +72,6 @@ public class ReadingListController : ControllerBase
         try
         {
             var (readingList, error) = ReadingList.Create(
-                Guid.NewGuid(),
                 request.ReadingListName,
                 request.UserId,
                 request.ReadingListDescription,

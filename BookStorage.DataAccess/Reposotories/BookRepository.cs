@@ -1,5 +1,4 @@
 using BookStore.Core.Models;
-using BookStorage.DataAccess;
 using BookStorage.DataAccess.Entites;
 using BookStore.Core.Abstractions;
 using Microsoft.EntityFrameworkCore;
@@ -25,10 +24,10 @@ public class BookRepository : IBookRepository
 
         return books.Select(b =>
         {
-            var (book, _) = Book.Create(b.Id, b.Title, b.Description, b.Price);
+            var (book, _) = Book.Create(b.Title, b.Description, b.Price);
             foreach (var ba in b.BookAuthors)
             {
-                var (author, _) = Author.Create(ba.AuthorId, ba.Author.Name);
+                var (author, _) = Author.Create(ba.Author.Name);
                 book.AddAuthor(author);
             }
             return book;
@@ -47,7 +46,8 @@ public class BookRepository : IBookRepository
 
         foreach (var author in authors)
         {
-            var existingAuthor = await _context.Authors.FindAsync(author.Id);
+            var existingAuthor = await _context.Authors
+                .FirstOrDefaultAsync(a => a.Name == author.Name);
             if (existingAuthor == null)
             {
                 existingAuthor = new AuthorEntity { Id = author.Id, Name = author.Name };
@@ -117,9 +117,29 @@ public class BookRepository : IBookRepository
 
     public async Task<Guid> DeleteBook(Guid id)
     {
-        var bookEntity = await _context.Books.FindAsync(id);
+        var bookEntity = await _context.Books
+            .Include(b => b.BookAuthors)
+            .FirstOrDefaultAsync(b => b.Id == id);
+
+        if (bookEntity == null)
+            throw new KeyNotFoundException($"Book with ID {id} not found");
+
+        var authorsOfDeletedBook = bookEntity.BookAuthors.Select(ba => ba.AuthorId).ToList();
 
         _context.Books.Remove(bookEntity);
+        await _context.SaveChangesAsync();
+
+        foreach (var authorId in authorsOfDeletedBook)
+        {
+            var isUsed = await _context.BookAuthors.AnyAsync(ba => ba.AuthorId == authorId);
+            if (!isUsed)
+            {
+                var authorEntity = await _context.Authors.FindAsync(authorId);
+                if (authorEntity != null)
+                    _context.Authors.Remove(authorEntity);
+            }
+        }
+
         await _context.SaveChangesAsync();
         return id;
     }

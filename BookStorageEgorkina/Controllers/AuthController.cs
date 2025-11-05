@@ -48,7 +48,6 @@ public class AuthController : ControllerBase
         try
         {
             var (user, error) = BookStore.Core.Models.User.Create(
-                Guid.NewGuid(),
                 request.Username,
                 request.Email,
                 request.Password,

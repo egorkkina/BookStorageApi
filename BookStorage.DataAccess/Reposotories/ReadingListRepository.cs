@@ -26,8 +26,7 @@ public class ReadingListRepository : IReadingListRepository
         var readingLists = listEntities
             .Select(rl => 
             {
-                var (readingList, error) = ReadingList.Create(
-                    rl.Id, 
+                var (readingList, error) = ReadingList.Create( 
                     rl.ReadingListName, 
                     rl.UserId,
                     rl.ReadingListDescription, 
@@ -56,7 +55,6 @@ public class ReadingListRepository : IReadingListRepository
             return null;
 
         var (readingList, error) = ReadingList.Create(
-            listEntity.Id, 
             listEntity.ReadingListName, 
             listEntity.UserId,
             listEntity.ReadingListDescription, 

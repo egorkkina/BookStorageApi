@@ -20,12 +20,12 @@ public class ReadingList
         IsPublic = isPublic;
     }
 
-    public static (ReadingList readingList, string error) Create(Guid id, string name, Guid userId,
+    public static (ReadingList readingList, string error) Create(string name, Guid userId,
         string description = "", bool isPublic = true)
     {
         var error = string.Empty;
         
-        var list = new ReadingList(id, name.Trim(), description?.Trim() ?? "", userId, isPublic);
+        var list = new ReadingList(Guid.NewGuid(), name.Trim(), description?.Trim() ?? "", userId, isPublic);
         
         return (list, error);
     }

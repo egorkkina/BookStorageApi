@@ -90,23 +90,34 @@ public class AnalyticsController : ControllerBase
 
         if (!books.Any() || !reviews.Any())
             return NotFound("No books or reviews found.");
+        
+        var reviewsWithGuid = reviews
+            .Select(r => 
+            {
+                Guid.TryParse(r.BookId.ToString(), out var bookGuid); // безопасное преобразование
+                return new { r.ReviewText, r.Rating, BookId = bookGuid, r.IsVerified };
+            })
+            .ToList();
 
         var result = books
-            .Select(book => new
+            .Select(book =>
             {
-                book.Id,
-                book.Title,
-                book.Authors,
-                AverageRating = reviews
-                    .Where(r => r.BookId == book.Id)
-                    .Select(r => r.Rating)
-                    .DefaultIfEmpty(0)
-                    .Average(),
-                ReviewCount = reviews.Count(r => r.BookId == book.Id)
+                var bookReviews = reviewsWithGuid.Where(
+                    r => r.BookId == book.Id).ToList();
+                var averageRating = bookReviews.Any() ? bookReviews.Average(
+                    r => r.Rating) : 0;
+                return new
+                {
+                    book.Id,
+                    book.Title,
+                    Authors = book.Authors.Select(a => a.Name).ToList(),
+                    AverageRating = averageRating,
+                    ReviewCount = bookReviews.Count
+                };
             })
+            .Where(b => b.AverageRating > 3)
             .OrderByDescending(b => b.AverageRating)
             .ThenByDescending(b => b.ReviewCount)
-            .Take(10)
             .ToList();
 
         return Ok(result);

@@ -16,7 +16,7 @@ public class Author
 
     public List<Book> Books { get; }
 
-    public static (Author author, string Error) Create(Guid id, string name)
+    public static (Author author, string Error) Create(string name)
     {
         var error = string.Empty;
         if (string.IsNullOrWhiteSpace(name))
@@ -24,7 +24,7 @@ public class Author
         if (name.Length > MAX_LENGTH_NAME)
             error = "Author name too long";
 
-        var author = new Author(id, name);
+        var author = new Author(Guid.NewGuid(), name);
         return (author, error);
     }
 }

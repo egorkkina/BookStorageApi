@@ -22,7 +22,7 @@ public class UserRepository : IUserRepository
             .ToListAsync();
 
         var users = userEntities
-            .Select(u => User.Create(u.Id, u.Username, u.Email, u.Password, Enum.Parse<UserRole>(u.Role)).user)
+            .Select(u => User.Create(u.Username, u.Email, u.Password, Enum.Parse<UserRole>(u.Role)).user)
             .ToList();
     
         return users;

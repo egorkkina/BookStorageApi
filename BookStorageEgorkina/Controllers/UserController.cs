@@ -1,6 +1,5 @@
 using BookStorageEgorkina.Contracts;
 using BookStore.Core.Abstractions;
-using BookStore.Core.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -47,7 +46,6 @@ public class UserController : ControllerBase
         try
         {
             var (user, error) = BookStore.Core.Models.User.Create(
-                Guid.NewGuid(),
                 request.Username,
                 request.Email,
                 request.Password, 

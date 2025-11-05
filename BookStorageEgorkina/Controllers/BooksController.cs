@@ -58,11 +58,13 @@ public class BooksController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Guid>> Create([FromBody] BooksRequest request)
     {
-        var (book, error) = Book.Create(Guid.NewGuid(), request.Title, request.Description, request.Price);
+        var (book, error) = Book.Create(request.Title, request.Description, request.Price);
         if (!string.IsNullOrEmpty(error))
             return BadRequest(error);
 
-        var authors = request.Authors?.Select(a => Author.Create(Guid.NewGuid(), a).author).ToList() 
+        var authors = request.Authors?
+                          .Select(a => Author.Create(a).author)
+                          .ToList() 
                       ?? new List<Author>();
 
         foreach (var author in authors)
@@ -78,7 +80,9 @@ public class BooksController : ControllerBase
     {
         try
         {
-            var authors = request.Authors?.Select(a => Author.Create(Guid.NewGuid(), a).author).ToList() 
+            var authors = request.Authors?
+                              .Select(a => Author.Create(a).author)
+                              .ToList() 
                           ?? new List<Author>();
 
             var bookId = await _bookService.UpdateBooks(id, request.Title, request.Description, authors, request.Price);

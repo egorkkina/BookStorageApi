@@ -5,12 +5,12 @@ public class Book
     public const int MAX_LENGTH_TITLE = 200;
     public const int MAX_LENGTH_DESCRIPTION = 1000;
     
-    private Book(Guid id, string title, string description, decimal price)
+    private Book(Guid id, string title, string description, decimal price, List<Author>? authors = null)
     {
         Id = id;
         Title = title;
         Description = description;
-        Authors = new List<Author>();
+        Authors = authors ?? new List<Author>();
         Price = price;
     }
     
@@ -20,7 +20,8 @@ public class Book
     public string Description { get; } = string.Empty;
     public decimal Price { get; }
 
-    public static (Book book, string Error) Create(Guid id, string title, string description, decimal price)
+    public static (Book book, string Error) Create(string title, string description, decimal price, 
+        List<Author>? authors = null)
     {
         var error = string.Empty;
         
@@ -30,7 +31,7 @@ public class Book
         if (title.Length > MAX_LENGTH_TITLE || description.Length > MAX_LENGTH_DESCRIPTION)
             error = "Title or description too long";
         
-        var book = new Book(id, title, description, price);
+        var book = new Book(Guid.NewGuid(), title, description, price, authors);
         
         return (book, error);
     }
