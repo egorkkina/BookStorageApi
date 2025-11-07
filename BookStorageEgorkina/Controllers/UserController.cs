@@ -8,19 +8,12 @@ namespace BookStorageEgorkina.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-public class UserController : ControllerBase
+public class UserController(IUserService userService) : ControllerBase
 {
-    private readonly IUserService _userService;
-
-    public UserController(IUserService userService)
-    {
-        _userService = userService;
-    }
-    
     [HttpGet]
     public async Task<ActionResult<List<UserResponse>>> GetAll()
     {
-        var users = await _userService.GetUsers();
+        var users = await userService.GetUsers();
 
         var response = users
             .Select(u => new UserResponse(u.Id, u.Username, u.Email, u.Role));
@@ -31,9 +24,7 @@ public class UserController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<UserResponse>> GetUserById(Guid id)
     {
-        var user = await _userService.GetUserById(id);
-        if (user == null)
-            return NotFound($"User with ID {id} not found");
+        var user = await userService.GetUserById(id);
 
         var response = new UserResponse(user.Id, user.Username, user.Email, user.Role);
         return Ok(response);
@@ -46,6 +37,7 @@ public class UserController : ControllerBase
         try
         {
             var (user, error) = BookStore.Core.Models.User.Create(
+                Guid.NewGuid(),
                 request.Username,
                 request.Email,
                 request.Password, 
@@ -54,7 +46,7 @@ public class UserController : ControllerBase
             if (!string.IsNullOrEmpty(error))
                 return BadRequest(error);
 
-            var userId = await _userService.CreateUser(user);
+            var userId = await userService.CreateUser(user);
             return Ok(userId);
         }
         catch (Exception ex)
@@ -69,7 +61,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            var user = await _userService.UpdateUser(
+            var user = await userService.UpdateUser(
                 id, request.Username, request.Email, request.Role);
 
             return Ok(user);
@@ -90,7 +82,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            var userId = await _userService.DeleteUser(id);
+            var userId = await userService.DeleteUser(id);
             return Ok(userId);
         }
         catch (KeyNotFoundException ex)
@@ -102,7 +94,7 @@ public class UserController : ControllerBase
     [HttpGet("email/{email}")]
     public async Task<ActionResult<UserResponse>> GetUserByEmail(string email)
     {
-        var user = await _userService.GetUserByEmail(email);
+        var user = await userService.GetUserByEmail(email);
         if (user == null)
             return NotFound($"User with email {email} not found");
 
@@ -117,13 +109,11 @@ public class UserController : ControllerBase
         if (userId == null || !Guid.TryParse(userId, out var userGuid))
             return Unauthorized();
 
-        var user = await _userService.GetUserById(userGuid);
+        var user = await userService.GetUserById(userGuid);
         if (user == null)
             return NotFound("User not found");
 
         var response = new UserResponse(user.Id, user.Username, user.Email, user.Role);
         return Ok(response);
     }
-    
-    
 }

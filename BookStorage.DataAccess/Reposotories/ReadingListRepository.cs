@@ -7,18 +7,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookStorage.DataAccess.Reposotories;
 
-public class ReadingListRepository : IReadingListRepository
+public class ReadingListRepository(BookStorageDbContext context) : IReadingListRepository
 {
-    private readonly BookStorageDbContext _context;
-
-    public ReadingListRepository(BookStorageDbContext context)
-    {
-        _context = context;
-    }
-    
     public async Task<List<ReadingList>> GetReadingLists()
     {
-        var listEntities = await _context.ReadingLists
+        var listEntities = await context.ReadingLists
             .AsNoTracking()
             .Include(rl => rl.ReadingListBooks)
             .ToListAsync();
@@ -33,7 +26,6 @@ public class ReadingListRepository : IReadingListRepository
                     rl.IsPublic
                 );
                 
-                // Добавляем ID книг через reflection
                 var bookIds = rl.ReadingListBooks.Select(rlb => rlb.BookId).ToList();
                 SetBookIds(readingList, bookIds);
                 
@@ -46,7 +38,7 @@ public class ReadingListRepository : IReadingListRepository
     
     public async Task<ReadingList?> GetReadingListById(Guid id)
     {
-        var listEntity = await _context.ReadingLists
+        var listEntity = await context.ReadingLists
             .AsNoTracking()
             .Include(rl => rl.ReadingListBooks)
             .FirstOrDefaultAsync(rl => rl.Id == id);
@@ -78,7 +70,7 @@ public class ReadingListRepository : IReadingListRepository
             IsPublic = readingList.IsPublic
         };
 
-        await _context.ReadingLists.AddAsync(listEntity);
+        await context.ReadingLists.AddAsync(listEntity);
         foreach (var bookId in readingList.BookIds)
         {
             var readingListBookEntity = new ReadingListBookEntity
@@ -86,17 +78,17 @@ public class ReadingListRepository : IReadingListRepository
                 ReadingListId = readingList.Id,
                 BookId = bookId
             };
-            await _context.ReadingListBooks.AddAsync(readingListBookEntity);
+            await context.ReadingListBooks.AddAsync(readingListBookEntity);
         }
     
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         return listEntity.Id;
     }
 
     public async Task<Guid> UpdateReadingList(Guid id, string name, string description, bool isPublic)
     {
-        await _context.ReadingLists
+        await context.ReadingLists
             .Where(rl => rl.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(rl => rl.ReadingListName, name)
@@ -108,11 +100,11 @@ public class ReadingListRepository : IReadingListRepository
 
     public async Task<Guid> DeleteReadingList(Guid id)
     {
-        await _context.ReadingListBooks
+        await context.ReadingListBooks
             .Where(rlb => rlb.ReadingListId == id)
             .ExecuteDeleteAsync();
         
-        await _context.ReadingLists
+        await context.ReadingLists
             .Where(rl => rl.Id == id)
             .ExecuteDeleteAsync();
 
@@ -140,15 +132,15 @@ public class ReadingListRepository : IReadingListRepository
             BookId = bookId
         };
 
-        await _context.ReadingListBooks.AddAsync(readingListBookEntity);
-        await _context.SaveChangesAsync();
+        await context.ReadingListBooks.AddAsync(readingListBookEntity);
+        await context.SaveChangesAsync();
 
         return readingListBookEntity.ReadingListId;
     }
     
     public async Task<Guid> RemoveBookFromReadingList(Guid readingListId, Guid bookId)
     {
-        await _context.ReadingListBooks
+        await context.ReadingListBooks
             .Where(rlb => rlb.ReadingListId == readingListId && rlb.BookId == bookId)
             .ExecuteDeleteAsync();
 
@@ -157,7 +149,7 @@ public class ReadingListRepository : IReadingListRepository
     
     public async Task<List<Guid>> GetBooksInReadingList(Guid readingListId)
     {
-        var bookIds = await _context.ReadingListBooks
+        var bookIds = await context.ReadingListBooks
             .Where(rlb => rlb.ReadingListId == readingListId)
             .Select(rlb => rlb.BookId)
             .ToListAsync();
@@ -167,7 +159,7 @@ public class ReadingListRepository : IReadingListRepository
     
     public async Task<bool> IsBookInReadingList(Guid readingListId, Guid bookId)
     {
-        return await _context.ReadingListBooks
+        return await context.ReadingListBooks
             .AnyAsync(rlb => rlb.ReadingListId == readingListId && rlb.BookId == bookId);
     }
 

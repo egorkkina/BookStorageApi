@@ -58,19 +58,7 @@ public class BooksController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Guid>> Create([FromBody] BooksRequest request)
     {
-        var (book, error) = Book.Create(request.Title, request.Description, request.Price);
-        if (!string.IsNullOrEmpty(error))
-            return BadRequest(error);
-
-        var authors = request.Authors?
-                          .Select(a => Author.Create(a).author)
-                          .ToList() 
-                      ?? new List<Author>();
-
-        foreach (var author in authors)
-            book.AddAuthor(author);
-
-        var bookId = await _bookService.CreateBooks(book);
+        var bookId = await _bookService.CreateBooks(request.Title, request.Description, request.Price, request.Authors);
         return Ok(bookId);
     }
 
@@ -80,9 +68,7 @@ public class BooksController : ControllerBase
     {
         try
         {
-            var authors = request.Authors?
-                              .Select(a => Author.Create(a).author)
-                              .ToList() 
+            var authors = request.Authors?.Select(a => Author.Create(Guid.NewGuid(), a).author).ToList() 
                           ?? new List<Author>();
 
             var bookId = await _bookService.UpdateBooks(id, request.Title, request.Description, authors, request.Price);
@@ -116,21 +102,16 @@ public class BooksController : ControllerBase
     [HttpGet("author/{author}")]
     public async Task<ActionResult<List<BooksResponse>>> GetBooksByAuthor(string author)
     {
-        var books = await _bookService.GetAllBooks();
+        var books = await _bookService.GetBookByAuthor(author);
+        var response = books.Select(b => new BooksResponse(
+            b.Id,
+            b.Title,
+            b.Description,
+            b.Authors.Select(a => a.Name).ToList(),
+            b.Price
+        )).ToList();
 
-        var filtered = books
-            .Where(b => b.Authors.Any(a => a.Name.Contains(author, StringComparison.OrdinalIgnoreCase)))
-            .Select(b => new BooksResponse(
-                b.Id,
-                b.Title,
-                b.Description,
-                b.Authors.Select(a => a.Name).ToList(),
-                b.Price
-            ))
-            .OrderBy(b => b.Authors.Count > 0 ? b.Authors[0] : "")
-            .ToList();
-
-        return Ok(filtered);
+        return Ok(response);
     }
     
 }

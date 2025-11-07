@@ -6,31 +6,38 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookStorage.DataAccess.Reposotories;
 
-public class UserRepository : IUserRepository
+public class UserRepository(BookStorageDbContext context) : IUserRepository
 {
-    private readonly BookStorageDbContext _context;
-    
-    public UserRepository(BookStorageDbContext context)
-    {
-        _context = context;
-    }
-    
     public async Task<List<User>> GetUsers()
     {
-        var userEntities = await _context.Users
+        var userEntities = await context.Users
             .AsNoTracking()
             .ToListAsync();
 
         var users = userEntities
-            .Select(u => User.Create(u.Username, u.Email, u.Password, Enum.Parse<UserRole>(u.Role)).user)
+            .Select(u =>
+            {
+                var (user, error) = User.Create(
+                    u.Id,
+                    u.Username,
+                    u.Email,
+                    u.Password,
+                    Enum.TryParse<UserRole>(u.Role, out var role) ? role : UserRole.User
+                );
+
+                if (!string.IsNullOrEmpty(error))
+                    throw new InvalidOperationException($"Invalid user data for {u.Username}: {error}");
+
+                return user;
+            })
             .ToList();
-    
+
         return users;
     }
     
     public async Task<Guid> UpdateUser(Guid id, string username, string email, UserRole role)
     {
-        await _context.Users
+        await context.Users
             .Where(u => u.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(u => u.Username, username)
@@ -52,15 +59,15 @@ public class UserRepository : IUserRepository
             CreatedAt = user.CreatedAt
         };
         
-        await _context.Users.AddAsync(userEntity);
-        await _context.SaveChangesAsync();
+        await context.Users.AddAsync(userEntity);
+        await context.SaveChangesAsync();
 
         return userEntity.Id;
     }
 
     public async Task<Guid> DeleteUser(Guid id)
     {
-        await _context.Users
+        await context.Users
             .Where(u => u.Id == id)
             .ExecuteDeleteAsync();
         

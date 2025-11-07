@@ -3,23 +3,16 @@ using BookStore.Core.Models;
 
 namespace BookStorage.Application;
 
-public class UserService : IUserService
+public class UserService(IUserRepository userRepository) : IUserService
 {
-    private readonly IUserRepository _userRepository;
-
-    public UserService(IUserRepository userRepository)
-    {
-        _userRepository = userRepository;
-    }
-    
     public async Task<List<User>> GetUsers()
     {
-        return await _userRepository.GetUsers();
+        return await userRepository.GetUsers();
     }
 
     public async Task<User?> GetUserById(Guid id)
     {
-        var users = await _userRepository.GetUsers();
+        var users = await userRepository.GetUsers();
         return users.FirstOrDefault(x => x.Id == id);
     }
     
@@ -28,7 +21,7 @@ public class UserService : IUserService
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("Email cannot be null or empty", nameof(email));
 
-        var users = await _userRepository.GetUsers();
+        var users = await userRepository.GetUsers();
         return users.FirstOrDefault(u => u.Email.Equals(email.Trim().ToLower(), StringComparison.OrdinalIgnoreCase));
     }
 
@@ -48,7 +41,7 @@ public class UserService : IUserService
         if (existingUser != null)
             throw new InvalidOperationException("User with this email already exists");
 
-        return await _userRepository.CreateUser(user);
+        return await userRepository.CreateUser(user);
     }
 
     public async Task<Guid> UpdateUser(Guid id, string username, string email, UserRole role)
@@ -67,7 +60,7 @@ public class UserService : IUserService
         if (userWithSameEmail != null && userWithSameEmail.Id != id)
             throw new InvalidOperationException("Email is already taken by another user");
 
-        return await _userRepository.UpdateUser(id, username, email, role);
+        return await userRepository.UpdateUser(id, username, email, role);
     }
 
     public async Task<Guid> DeleteUser(Guid id)
@@ -75,12 +68,12 @@ public class UserService : IUserService
         var existingUser = await GetUserById(id);
         if (existingUser == null)
             throw new KeyNotFoundException($"User with ID {id} not found");
-        return await _userRepository.DeleteUser(id);
+        return await userRepository.DeleteUser(id);
     }
 
     public async Task<bool> ValidateUserCredentials(string email, string password)
     {
-        var users = await _userRepository.GetUsers();
+        var users = await userRepository.GetUsers();
         var user = users.FirstOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
         
         return user != null && user.VerifyPassword(password);

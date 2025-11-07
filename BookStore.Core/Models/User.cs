@@ -11,9 +11,6 @@ public class User
     public UserRole Role { get; }
     public DateTime CreatedAt { get; }
     
-    private readonly List<Guid> _readingListIds = new();
-    public IReadOnlyList<Guid> ReadingListIds => _readingListIds;
-    
     private User(Guid id, string username, string email, string password, UserRole role)
     {
         Id = id;
@@ -24,7 +21,7 @@ public class User
         CreatedAt = DateTime.UtcNow;
     }
 
-    public static (User user, string Error) Create(string username,
+    public static (User user, string Error) Create(Guid id, string username,
         string email, string password, UserRole role = UserRole.User)
     {
         var error = string.Empty;
@@ -35,7 +32,7 @@ public class User
         if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
             error = "Password must be at least 4 characters";
         
-        var user = new User(Guid.NewGuid(), username.Trim(), email.Trim().ToLower(), password, role);
+        var user = new User(id, username.Trim(), email.Trim().ToLower(), password, role);
         return (user, error);
     }
     

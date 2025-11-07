@@ -5,18 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookStorage.DataAccess.Reposotories;
 
-public class BookReviewRepository : IBookReviewRepository
+public class BookReviewRepository(BookStorageDbContext context) : IBookReviewRepository
 {
-    private readonly BookStorageDbContext _context;
-
-    public BookReviewRepository(BookStorageDbContext context)
-    {
-        _context = context;
-    }
-
     public async Task<List<BookReview>> GetReviews()
     {
-        var reviewEntities = await _context.Reviews
+        var reviewEntities = await context.Reviews
             .AsNoTracking()
             .ToListAsync();
 
@@ -47,15 +40,15 @@ public class BookReviewRepository : IBookReviewRepository
             IsVerified = review.IsVerified
         };
 
-        await _context.Reviews.AddAsync(reviewEntity);
-        await _context.SaveChangesAsync();
+        await context.Reviews.AddAsync(reviewEntity);
+        await context.SaveChangesAsync();
 
         return reviewEntity.Id;
     }
 
     public async Task<Guid> UpdateReview(Guid id, string reviewText, int rating)
     {
-        await _context.Reviews
+        await context.Reviews
             .Where(r => r.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(r => r.ReviewText, reviewText)
@@ -67,7 +60,7 @@ public class BookReviewRepository : IBookReviewRepository
 
     public async Task<Guid> DeleteReview(Guid id)
     {
-        await _context.Reviews
+        await context.Reviews
             .Where(r => r.Id == id)
             .ExecuteDeleteAsync();
 

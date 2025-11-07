@@ -16,6 +16,9 @@ public class BookConfigurations : IEntityTypeConfiguration<BookEntity>
             .HasMaxLength(Book.MAX_LENGTH_TITLE)
             .IsRequired();
         
+        builder.Property(x => x.Authors)
+            .HasMaxLength(1000);
+        
         builder
             .HasMany(b => b.BookAuthors)
             .WithOne(ba => ba.Book)

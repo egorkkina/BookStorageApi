@@ -11,7 +11,6 @@ public class BookReview
     public string ReviewText { get; }
     public int Rating { get; }
     public DateTime Created { get; }
-    
     public DateTime? Updated { get; }
     public bool IsVerified { get; }
 
@@ -32,7 +31,7 @@ public class BookReview
     {
         var error = string.Empty;
         
-        if (rating < 1 || rating > 5)
+        if (rating is < 1 or > 5)
             error = "Rating must be between 1 and 5 stars";
 
         if (string.IsNullOrWhiteSpace(reviewText) || reviewText.Length > MAX_REVIEW_LENGTH)

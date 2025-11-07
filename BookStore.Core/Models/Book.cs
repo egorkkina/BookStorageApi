@@ -20,7 +20,7 @@ public class Book
     public string Description { get; } = string.Empty;
     public decimal Price { get; }
 
-    public static (Book book, string Error) Create(string title, string description, decimal price, 
+    public static (Book book, string Error) Create(Guid id, string title, string description, decimal price, 
         List<Author>? authors = null)
     {
         var error = string.Empty;
@@ -31,14 +31,8 @@ public class Book
         if (title.Length > MAX_LENGTH_TITLE || description.Length > MAX_LENGTH_DESCRIPTION)
             error = "Title or description too long";
         
-        var book = new Book(Guid.NewGuid(), title, description, price, authors);
+        var book = new Book(id, title, description, price, authors);
         
         return (book, error);
-    }
-    
-    public void AddAuthor(Author author)
-    {
-        if (!Authors.Any(a => a.Id == author.Id))
-            Authors.Add(author);
     }
 }
