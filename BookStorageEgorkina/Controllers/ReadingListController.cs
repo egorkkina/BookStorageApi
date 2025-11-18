@@ -65,13 +65,14 @@ public class ReadingListController : ControllerBase
         }
     }
     
-    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult<Guid>> Create([FromBody] ReadingListRequest request)
     {
         try
         {
+            var readingListId = Guid.NewGuid();
             var (readingList, error) = ReadingList.Create(
+                readingListId,
                 request.ReadingListName,
                 request.UserId,
                 request.ReadingListDescription,
@@ -92,7 +93,6 @@ public class ReadingListController : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Admin")]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<Guid>> Update(Guid id, [FromBody] ReadingListRequest request)
     {
@@ -113,7 +113,6 @@ public class ReadingListController : ControllerBase
         }
     }
     
-    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult> Delete(Guid id)
     {
@@ -128,7 +127,6 @@ public class ReadingListController : ControllerBase
         }
     }
     
-    [Authorize(Roles = "Admin")]
     [HttpPost("{readingListId:guid}/books/{bookId:guid}")]
     public async Task<ActionResult> AddBook(Guid readingListId, Guid bookId)
     {
@@ -147,7 +145,6 @@ public class ReadingListController : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Admin")]
     [HttpDelete("{readingListId:guid}/books/{bookId:guid}")]
     public async Task<ActionResult> RemoveBook(Guid readingListId, Guid bookId)
     {

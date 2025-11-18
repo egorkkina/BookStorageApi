@@ -86,13 +86,13 @@ public class BookReviewController : ControllerBase
         }
     }
     
-    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult<Guid>> Create([FromBody] ReviewRequest request)
     {
         try
         {
             var (review, error) = BookReview.CreateBookReview(
+                Guid.NewGuid(), 
                 request.BookId,
                 request.UserId,
                 request.ReviewText,

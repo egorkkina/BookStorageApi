@@ -20,6 +20,7 @@ public class ReadingListRepository(BookStorageDbContext context) : IReadingListR
             .Select(rl => 
             {
                 var (readingList, error) = ReadingList.Create( 
+                    rl.Id,
                     rl.ReadingListName, 
                     rl.UserId,
                     rl.ReadingListDescription, 
@@ -47,6 +48,7 @@ public class ReadingListRepository(BookStorageDbContext context) : IReadingListR
             return null;
 
         var (readingList, error) = ReadingList.Create(
+            listEntity.Id,
             listEntity.ReadingListName, 
             listEntity.UserId,
             listEntity.ReadingListDescription, 

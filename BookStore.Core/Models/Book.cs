@@ -25,7 +25,7 @@ public class Book
     {
         var error = string.Empty;
         
-        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(description) || price <= 0)
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(description) || price < 0)
             error = "Title, description must not be empty and price > 0";
 
         if (title.Length > MAX_LENGTH_TITLE || description.Length > MAX_LENGTH_DESCRIPTION)

@@ -26,7 +26,7 @@ public class BookReview
         IsVerified = isVerified;
     }
 
-    public static (BookReview bookReview, string Error) CreateBookReview(Guid bookId, Guid userId, 
+    public static (BookReview bookReview, string Error) CreateBookReview(Guid id, Guid bookId, Guid userId, 
         string reviewText, int rating, bool isVerifiedPurchase = false)
     {
         var error = string.Empty;
@@ -37,7 +37,7 @@ public class BookReview
         if (string.IsNullOrWhiteSpace(reviewText) || reviewText.Length > MAX_REVIEW_LENGTH)
             error = "Review text is required and must be under 1000 characters";
 
-        var bookReview = new BookReview(Guid.NewGuid(), bookId, userId, 
+        var bookReview = new BookReview(id, bookId, userId, 
             reviewText.Trim(), rating, isVerifiedPurchase);
         
         return (bookReview, error);

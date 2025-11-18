@@ -54,6 +54,7 @@ public class BookReviewService(
             throw new KeyNotFoundException($"Review with ID {reviewId} not found");
 
         var (updatedReview, error) = BookReview.CreateBookReview(
+            review.Id,
             review.BookId,
             review.UserId,
             reviewText,

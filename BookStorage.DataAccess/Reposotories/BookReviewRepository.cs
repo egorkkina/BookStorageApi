@@ -15,6 +15,7 @@ public class BookReviewRepository(BookStorageDbContext context) : IBookReviewRep
 
         var reviews = reviewEntities
             .Select(r => BookReview.CreateBookReview(
+                r.Id,
                 r.BookId, 
                 r.UserId, 
                 r.ReviewText, 

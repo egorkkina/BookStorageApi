@@ -1,0 +1,30 @@
+.custom-button {
+  width: 100%;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.custom-button.filled {
+  border: none;
+  background-color: #3d5242ff;
+  color: white;
+}
+
+.custom-button.filled:hover {
+  background-color: #5A7D63;
+}
+
+.custom-button.outlined {
+  border: 2px solid #6A8D73;
+  background-color: transparent;
+  color: #6A8D73;
+}
+
+.custom-button.outlined:hover {
+  background-color: #6A8D73;
+  color: white;
+}

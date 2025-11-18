@@ -1,0 +1,265 @@
+.login-container {
+  display: flex;
+  height: 100vh;
+  font-family: 'Arial', sans-serif;
+  background-color: rgb(207, 217, 228);
+  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+  padding: 5px;
+}
+
+.login-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background-image: url('/public/forest.jpg');
+  background-size: cover;
+  z-index: 1;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.7);
+}
+
+.login-background::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(55, 65, 75, 0.4);
+}
+
+.login-box {
+  background: white;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 35px 30px;
+  border-radius: 30px;
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.1),
+    0 20px 40px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 2;
+  min-height: 450px;
+}
+
+.login-content {
+  text-align: center;
+  width: 100%;
+}
+
+.login-header {
+  margin-bottom: 20px;
+}
+
+.login-header h1 {
+  color: #2D3436;
+  margin-bottom: 5px;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.login-subtitle {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+}
+
+.login-form {
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #2D3436;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #E8E8E8;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #F8F9FA;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #6A8D73;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(106, 141, 115, 0.1);
+}
+
+.form-input::placeholder {
+  color: #A4B0A9;
+}
+
+select.form-input {
+  cursor: pointer;
+  appearance: none;
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 12px;
+}
+
+.submit-button {
+  margin-top: 10px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.auth-switch {
+  margin: 30px 0;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 25px 0;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #E8E8E8;
+}
+
+.divider span {
+  background: white;
+  padding: 0 15px;
+  color: #666;
+  font-size: 14px;
+  position: relative;
+}
+
+.auth-switch p {
+  color: #666;
+  font-size: 15px;
+  margin: 0;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #6A8D73;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 0;
+  transition: color 0.3s ease;
+}
+
+.link-button:hover {
+  color: #5A7D63;
+  text-decoration: underline;
+}
+
+.login-links {
+  margin-top: 25px;
+}
+
+.back-link {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.back-link::before {
+  color: #6A8D73;
+}
+
+.back-link:hover {
+  color: #6A8D73;
+  border-color: #6A8D73;
+  box-shadow: 0 4px 15px rgba(106, 141, 115, 0.2);
+  transform: translateY(-2px);
+}
+
+.back-link:hover::before {
+  left: 100%;
+}
+
+.arrow {
+  font-size: 18px;
+  font-weight: bold;
+  transition: transform 0.3s ease;
+}
+
+.back-link:hover .arrow {
+  transform: translateX(-3px);
+}
+
+.arrow {
+  font-size: 16px;
+}
+
+.qwestion {
+  color: #1a1a1a;
+  font-size: 16px;
+  margin: 0;
+}
+
+.divider{
+  height: 0.2px;
+  background-color: #6A8D73;
+  flex: 1;
+}
+
+/* Улучшения для темной темы */
+@media (prefers-color-scheme: dark) {
+  .login-box {
+    background: #1a1a1a;
+  }
+  
+  .login-header h1 {
+    color: #ffffff;
+  }
+  
+  .form-group label {
+    color: #e0e0e0;
+  }
+  
+  .form-input {
+    background: #2a2a2a;
+    border-color: #404040;
+    color: #ffffff;
+  }
+  
+  .form-input:focus {
+    background: #333333;
+  }
+
+  .qwestion {
+  color: #666;
+  }
+}
