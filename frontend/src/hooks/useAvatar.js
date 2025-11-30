@@ -5,7 +5,6 @@ export const useAvatar = () => {
   const { user, updateUser } = useAuth();
   const [avatarError, setAvatarError] = useState('');
 
-  // Загрузка нового аватара
   const handleAvatarUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;

@@ -1,6 +1,9 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
+import PublicOnlyRoute from "./components/PublicOnlyRoute/PublicOnlyRoute";
+import MainLayout from "./components/Layout/MainLayout";
 
 import HomePage from "./pages/HomePage/HomePage";
 import LoginPage from "./pages/LoginPage/LoginPage";
@@ -16,22 +19,90 @@ import ProfileFormPage from "./pages/ProfileFormPage/ProfileFormPage";
 
 function AppRoutes() {
   const location = useLocation();
+  
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route
-        path="/profile"
-        element={<ProfilePage key={location.key} />}
-      />
-      <Route path="/books" element={<BooksPage />} />
-      <Route path="/books/:id" element={<BookFormPage />} />
-      <Route path="/reviews" element={<BookReviewPage />} />
-      <Route path="/review/:id" element={<BookReviewFormPage />} />
-      <Route path="/readinglists" element={<ReadingListsPage />} />
-      <Route path="/readinglists/:id" element={<ReadingListFormPage />} />
-      <Route path="/profile/:id" element={<ProfileFormPage />} />
+      <Route path="/" element={
+        <PublicOnlyRoute>
+          <HomePage />
+        </PublicOnlyRoute>
+      } />
+      <Route path="/login" element={
+        <PublicOnlyRoute>
+          <LoginPage />
+        </PublicOnlyRoute>
+      } />
+      
+      <Route path="/register" element={
+        <PublicOnlyRoute>
+          <RegisterPage />
+        </PublicOnlyRoute>
+      } />
+
+      {/* Защищенные маршруты (только после входа) С Layout */}
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ProfilePage key={location.key} />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/books" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <BooksPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/books/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <BookFormPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/reviews" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <BookReviewPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/review/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <BookReviewFormPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/readinglists" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ReadingListsPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/readinglists/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ReadingListFormPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/profile/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ProfileFormPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }

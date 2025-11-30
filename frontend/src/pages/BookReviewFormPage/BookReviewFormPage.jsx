@@ -27,7 +27,6 @@ export default function BookReviewFormPage() {
     reviewText: ''
   });
 
-  // Функция для загрузки названия книги
   const loadBookTitle = async (bookId) => {
     if (!bookId) return '';
     
@@ -233,7 +232,6 @@ export default function BookReviewFormPage() {
 
               <div className="review-meta-details">
                 <p><strong>Книга:</strong> {displayBookTitle}</p>
-                <p><strong>Пользователь:</strong> {review.userName || `#${review.userId}`}</p>
                 <p><strong>Статус:</strong> {review.isVerified ? 'Проверен' : 'Ожидает проверки'}</p>
               </div>
 

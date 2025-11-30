@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import bookService from '../../services/bookService';
 import reviewService from '../../services/reviewService';
+import readingListService from '../../services/readingListService';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/Button/Button';
 import Sidebar from '../../components/Sidebar/Sidebar';
@@ -32,6 +33,25 @@ export default function BookFormPage() {
 
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+
+  // Новые состояния для функционала списков чтения
+  const [userReadingLists, setUserReadingLists] = useState([]);
+  const [showAddToListModal, setShowAddToListModal] = useState(false);
+  const [selectedListId, setSelectedListId] = useState('');
+  const [addingToList, setAddingToList] = useState(false);
+  const [listOperationMessage, setListOperationMessage] = useState('');
+
+  // Загрузка списков пользователя
+  const loadUserReadingLists = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const lists = await readingListService.getByUser(user.id);
+      setUserReadingLists(lists);
+    } catch (err) {
+      console.error('Ошибка при загрузке списков пользователя:', err);
+    }
+  };
 
   const loadReviews = async () => {
     setReviewsLoading(true);
@@ -67,13 +87,42 @@ export default function BookFormPage() {
     };
 
     loadBook();
-  }, [id]);
+    loadUserReadingLists();
+  }, [id, user]);
 
+  // Функция добавления книги в список
+  const handleAddToReadingList = async () => {
+    if (!selectedListId) {
+      setListOperationMessage('Выберите список для чтения');
+      return;
+    }
+
+    setAddingToList(true);
+    setListOperationMessage('');
+    
+    try {
+      await readingListService.addBook(selectedListId, id);
+      setListOperationMessage('Книга успешно добавлена в список!');
+      
+      // Закрываем модальное окно через 2 секунды
+      setTimeout(() => {
+        setShowAddToListModal(false);
+        setSelectedListId('');
+        setListOperationMessage('');
+      }, 2000);
+    } catch (err) {
+      console.error('Ошибка при добавлении книги в список:', err);
+      setListOperationMessage('Ошибка при добавлении книги в список');
+    } finally {
+      setAddingToList(false);
+    }
+  };
+
+  // Остальные функции остаются без изменений...
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Очищаем ошибку при изменении поля
     if (fieldErrors[name]) {
       setFieldErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -82,10 +131,8 @@ export default function BookFormPage() {
   const handleAuthorChange = (index, value) => {
     const newAuthors = [...formData.authors];
     newAuthors[index] = value;
-
     setFormData(prev => ({ ...prev, authors: newAuthors }));
     
-    // Очищаем ошибки авторов при изменении
     if (fieldErrors.authors) {
       setFieldErrors(prev => ({ ...prev, authors: null }));
     }
@@ -105,15 +152,13 @@ export default function BookFormPage() {
 
   const validateForm = () => {
     const errors = {};
-
-    // Валидация названия книги
+    // ... существующая валидация без изменений
     if (!formData.title.trim()) {
       errors.title = 'Название книги обязательно';
     } else if (formData.title.trim().length > 200) {
       errors.title = 'Название книги не должно превышать 200 символов';
     }
 
-    // Валидация описания
     if (!formData.description.trim()) {
       errors.description = 'Описание обязательно';
     } else if (formData.description.trim().length < 10) {
@@ -122,7 +167,6 @@ export default function BookFormPage() {
       errors.description = 'Описание не должно превышать 1000 символов';
     }
 
-    // Валидация цены
     if (formData.price === '' || formData.price === null || formData.price === undefined) {
       errors.price = 'Цена обязательна';
     } else {
@@ -136,7 +180,6 @@ export default function BookFormPage() {
       }
     }
 
-    // Валидация авторов (не обязательны, но если есть - проверяем)
     if (formData.authors && formData.authors.length > 0) {
       const authorErrors = [];
       let hasValidAuthor = false;
@@ -163,7 +206,6 @@ export default function BookFormPage() {
     if (Object.keys(validationErrors).length) {
       setFieldErrors(validationErrors);
       
-      // Прокрутка к первой ошибке
       const firstErrorField = Object.keys(validationErrors)[0];
       const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
       if (errorElement) {
@@ -194,7 +236,6 @@ export default function BookFormPage() {
       console.error('Ошибка при сохранении:', err);
       setError('Ошибка при сохранении книги');
 
-      // Восстанавливаем исходные данные при ошибке
       if (book) {
         setFormData({
           title: book.title,
@@ -269,6 +310,17 @@ export default function BookFormPage() {
               </div>
 
               <div className="book-actions">
+                {/* Новая кнопка добавления в список */}
+                {user && (
+                  <Button 
+                    variant="filled" 
+                    onClick={() => setShowAddToListModal(true)}
+                    className="add-to-list-btn"
+                  >
+                    + Добавить в список для чтения
+                  </Button>
+                )}
+
                 {user?.role === 'Admin' && (
                   <>
                     <Button variant="filled" onClick={() => setIsEditing(true)}>
@@ -338,7 +390,9 @@ export default function BookFormPage() {
               </div>
             </>
           ) : (
+            // Форма редактирования (без изменений)
             <div className="book-edit-form">
+              {/* ... существующая форма редактирования без изменений ... */}
               <h1>Редактирование книги</h1>
 
               <div className="book-edit-field">
@@ -428,6 +482,75 @@ export default function BookFormPage() {
                 <Button variant="outlined" onClick={handleCancel} disabled={saving}>
                   Отмена
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Модальное окно добавления в список */}
+          {showAddToListModal && (
+            <div className="modal-overlay-list" onClick={() => setShowAddToListModal(false)}>
+              <div className="modal-content-list" onClick={e => e.stopPropagation()}>
+                <h2>Добавить в список для чтения</h2>
+                <p className="modal-subtitle-list">Выберите список, в который хотите добавить книгу "{book?.title}"</p>
+
+                {listOperationMessage && (
+                  <div className={`operation-message ${listOperationMessage.includes('успешно') ? 'success' : 'error'}`}>
+                    {listOperationMessage}
+                  </div>
+                )}
+
+                <div className="form-group-list">
+                  <label htmlFor="readingListSelect">Список для чтения *</label>
+                  <select
+                    id="readingListSelect"
+                    value={selectedListId}
+                    onChange={(e) => setSelectedListId(e.target.value)}
+                    className="form-select"
+                    disabled={addingToList}
+                  >
+                    <option value="">-- Выберите список --</option>
+                    {userReadingLists.map(list => (
+                      <option key={list.id} value={list.id}>
+                        {list.readingListName}
+                        
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {userReadingLists.length === 0 && (
+                  <div className="no-lists-message-list">
+                    <p>У вас пока нет списков для чтения</p>
+                    <Button 
+                      variant="outlined" 
+                      onClick={() => navigate('/reading-lists')}
+                      size="small"
+                    >
+                      Создать список
+                    </Button>
+                  </div>
+                )}
+
+                <div className="form-actions-list">
+                  <Button 
+                    variant="filled" 
+                    onClick={handleAddToReadingList}
+                    disabled={addingToList || !selectedListId || userReadingLists.length === 0}
+                  >
+                    {addingToList ? 'Добавление...' : 'Добавить в список'}
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    onClick={() => {
+                      setShowAddToListModal(false);
+                      setSelectedListId('');
+                      setListOperationMessage('');
+                    }}
+                    disabled={addingToList}
+                  >
+                    Отмена
+                  </Button>
+                </div>
               </div>
             </div>
           )}

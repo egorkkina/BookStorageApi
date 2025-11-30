@@ -29,7 +29,6 @@ export default function BookReviewsPage() {
   const [bookSearchResults, setBookSearchResults] = useState([]);
   const [searchingBooks, setSearchingBooks] = useState(false);
 
-  // Функция для загрузки названий книг
   const loadBookTitles = async (reviewList) => {
     const bookIds = [...new Set(reviewList.map(review => review.bookId))];
     const booksMap = {};
@@ -47,7 +46,6 @@ export default function BookReviewsPage() {
     setBooks(booksMap);
   };
 
-  // Функция поиска книг по названию
   const searchBooks = async (query) => {
     if (!query.trim()) {
       setBookSearchResults([]);
@@ -59,7 +57,7 @@ export default function BookReviewsPage() {
       const allBooks = await bookService.getAllBooks();
       const filteredBooks = allBooks.filter(book => 
         book.title.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 10); // Ограничиваем результаты
+      ).slice(0, 10);
       
       setBookSearchResults(filteredBooks);
     } catch (err) {
@@ -79,7 +77,6 @@ export default function BookReviewsPage() {
         : await reviewService.getAll();
       setReviews(data);
       
-      // Загружаем названия книг для отзывов
       await loadBookTitles(data);
     } catch (err) {
       setError('Ошибка при загрузке отзывов');
@@ -105,7 +102,6 @@ export default function BookReviewsPage() {
       [name]: name === 'rating' ? Number(value) : value
     }));
 
-    // При изменении названия книги ищем книги
     if (name === 'bookTitle') {
       searchBooks(value);
     }
@@ -157,7 +153,6 @@ export default function BookReviewsPage() {
     }
   };
 
-  // Получаем отображаемое название книги для отзыва
   const getBookTitle = (review) => {
     return books[review.bookId] || review.bookTitle || `Книга #${review.bookId}`;
   };
@@ -234,7 +229,6 @@ export default function BookReviewsPage() {
                         }
                       </p>
                       <div className="review-meta">
-                        <span>{review.userName || `Пользователь ${review.userId}`}</span>
                         <span>{review.createdAt && new Date(review.createdAt).toLocaleDateString('ru-RU')}</span>
                         {review.isVerified && (
                           <>

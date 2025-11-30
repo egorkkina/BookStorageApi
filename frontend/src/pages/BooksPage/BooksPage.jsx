@@ -19,6 +19,10 @@ function BooksPage() {
   const [searchType, setSearchType] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' или 'table'
+  const [sortField, setSortField] = useState('title');
+  const [sortDirection, setSortDirection] = useState('asc');
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -35,12 +39,16 @@ function BooksPage() {
     loadAllBooks();
   }, []);
 
+  useEffect(() => {
+    sortBooks(displayedBooks, sortField, sortDirection);
+  }, [sortField, sortDirection]);
+
   const loadAllBooks = async () => {
     setLoading(true);
     try {
       const booksData = await bookService.getAllBooks();
       setBooks(booksData);
-      setDisplayedBooks(booksData);
+      sortBooks(booksData, sortField, sortDirection);
     } catch (err) {
       console.error('Error loading books:', err);
       setError('Ошибка при загрузке книг');
@@ -49,9 +57,46 @@ function BooksPage() {
     }
   };
 
+  const sortBooks = (booksArray, field, direction) => {
+    const sorted = [...booksArray].sort((a, b) => {
+      let aValue = a[field];
+      let bValue = b[field];
+      
+      if (field === 'authors' && Array.isArray(aValue)) {
+        aValue = aValue[0] || '';
+        bValue = bValue[0] || '';
+      }
+      
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+      
+      if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    setDisplayedBooks(sorted);
+  };
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field) => {
+    if (sortField !== field) return '↕';
+    return sortDirection === 'asc' ? '↑' : '↓';
+  };
+
   const handleSearchByAuthor = async () => {
     if (!searchTerm.trim()) {
-      setDisplayedBooks(books);
+      sortBooks(books, sortField, sortDirection);
       setSearchType('all');
       return;
     }
@@ -59,13 +104,12 @@ function BooksPage() {
     setSearchLoading(true);
     try {
       const booksByAuthor = await bookService.getBooksByAuthor(searchTerm);
-      setDisplayedBooks(booksByAuthor);
+      sortBooks(booksByAuthor, sortField, sortDirection);
       setSearchType('author');
       setError('');
     } catch (err) {
       console.error('Error reading books by author:', err);
-      setError('Ошибка при поиске по автору');
-      setDisplayedBooks(books);
+      sortBooks(books, sortField, sortDirection);
       setSearchType('all');
     } finally {
       setSearchLoading(false);
@@ -78,7 +122,7 @@ function BooksPage() {
 
   const handleShowAllBooks = () => {
     setSearchTerm('');
-    setDisplayedBooks(books);
+    sortBooks(books, sortField, sortDirection);
     setSearchType('all');
   };
 
@@ -92,7 +136,6 @@ function BooksPage() {
       ...prev, 
       [name]: name === 'price' ? parseFloat(value) || 0 : value 
     }));
-    // Очищаем ошибку при изменении поля
     if (fieldErrors[name]) {
       setFieldErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -120,8 +163,6 @@ function BooksPage() {
 
   const validateForm = () => {
     const errors = {};
-    
-    // Проверка обязательных полей
     if (!formData.title.trim()) {
       errors.title = 'Название обязательно';
     }
@@ -152,11 +193,10 @@ function BooksPage() {
     setFieldErrors({});
 
     try {
-      // Фильтруем пустых авторов перед отправкой
       const bookData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
-        authors: formData.authors.filter(a => a.trim() !== ''), // Убираем пустых авторов
+        authors: formData.authors.filter(a => a.trim() !== ''),
         price: formData.price
       };
 
@@ -222,7 +262,6 @@ function BooksPage() {
       <div className={`profile-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         <div className="books-page">
           
-          {/* ---------- Заголовок ---------- */}
           <div className="page-header">
             <h1>
               {searchType === 'author'
@@ -250,6 +289,24 @@ function BooksPage() {
                 </Button>
               </div>
 
+              {/* Переключение режима просмотра */}
+              <div className="view-mode-toggle">
+                <Button
+                  variant={viewMode === 'cards' ? 'filled' : 'outlined'}
+                  size="small"
+                  onClick={() => setViewMode('cards')}
+                >
+                  Карточки
+                </Button>
+                <Button
+                  variant={viewMode === 'table' ? 'filled' : 'outlined'}
+                  size="small"
+                  onClick={() => setViewMode('table')}
+                >
+                  Таблица
+                </Button>
+              </div>
+
               {searchType === 'author' && (
                 <Button variant="outlined" size="small" onClick={handleShowAllBooks}>
                   Показать все
@@ -270,31 +327,95 @@ function BooksPage() {
 
           {error && <div className="error-message">{error}</div>}
 
-          {/* ---------- GRID КНИГ ---------- */}
-          <div className="books-grid">
-            {displayedBooks.map(book => (
-              <div
-                key={book.id}
-                className="book-card"
-                onClick={() => handleBookClick(book.id)}
-              >
-                <h3 className="book-title">{book.title}</h3>
-                {book.description && (
-                  <p className="book-description">
-                    {book.description.length > 150
-                      ? `${book.description.slice(0, 150)}...`
-                      : book.description}
+          {/* Карточное представление */}
+          {viewMode === 'cards' && (
+            <div className="books-grid">
+              {displayedBooks.map(book => (
+                <div
+                  key={book.id}
+                  className="book-card"
+                  onClick={() => handleBookClick(book.id)}
+                >
+                  <h3 className="book-title">{book.title}</h3>
+                  {book.description && (
+                    <p className="book-description">
+                      {book.description.length > 150
+                        ? `${book.description.slice(0, 150)}...`
+                        : book.description}
+                    </p>
+                  )}
+                  <p className="book-authors">
+                    {book.authors?.join(', ') || 'Автор неизвестен'}
                   </p>
-                )}
-                <p className="book-authors">
-                  {book.authors?.join(', ') || 'Автор неизвестен'}
-                </p>
-                <div className="book-price-section">
-                  <span className="book-price">{book.price} ₽</span>
+                  <div className="book-price-section">
+                    <span className="book-price">{book.price} ₽</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+
+          {viewMode === 'table' && (
+            <div className="books-table-container">
+              <table className="books-table">
+                <thead>
+                  <tr>
+                    <th 
+                      className="sortable-header"
+                      onClick={() => handleSort('title')}
+                    >
+                      Название {getSortIcon('title')}
+                    </th>
+                    <th 
+                      className="sortable-header"
+                      onClick={() => handleSort('authors')}
+                    >
+                      Автор {getSortIcon('authors')}
+                    </th>
+                    <th>Описание</th>
+                    <th 
+                      className="sortable-header"
+                      onClick={() => handleSort('price')}
+                    >
+                      Цена {getSortIcon('price')}
+                    </th>
+                    <th>Действия</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedBooks.map(book => (
+                    <tr key={book.id} className="book-table-row">
+                      <td className="book-table-title">
+                        <strong>{book.title}</strong>
+                      </td>
+                      <td className="book-table-authors">
+                        {book.authors?.join(', ') || 'Автор неизвестен'}
+                      </td>
+                      <td className="book-table-description">
+                        {book.description && (
+                          book.description.length > 100
+                            ? `${book.description.slice(0, 100)}...`
+                            : book.description
+                        )}
+                      </td>
+                      <td className="book-table-price">
+                        <span className="price-badge">{book.price} ₽</span>
+                      </td>
+                      <td className="book-table-actions">
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleBookClick(book.id)}
+                        >
+                          Подробнее
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {displayedBooks.length === 0 && (
             <div className="empty-state">
@@ -305,7 +426,6 @@ function BooksPage() {
             </div>
           )}
 
-          {/* ---------- ОБНОВЛЕННАЯ ФОРМА ДОБАВЛЕНИЯ КНИГИ ---------- */}
           {showAddForm && (
             <div className="add-book-modal-overlay">
               <div className="add-book-modal">

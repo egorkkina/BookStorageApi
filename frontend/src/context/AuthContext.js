@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
     }
 
     const username = decoded.unique_name;
-    const savedAvatar = localStorage.getItem(getAvatarKey(username)); // аватар конкретного пользователя
+    const savedAvatar = localStorage.getItem(getAvatarKey(username));
 
     setUser({
       id: decoded.nameid,

@@ -38,7 +38,7 @@ public class BookService(IBookRepository bookRepository) : IBookService
         if (!string.IsNullOrEmpty(error))
             throw new ArgumentException(error);
 
-        return await bookRepository.CreateBook(book, authors);
+        return await bookRepository.CreateBook(book);
     }
 
     public async Task<Guid> UpdateBooks(Guid id, string title, string description, List<Author>? authors, decimal price)

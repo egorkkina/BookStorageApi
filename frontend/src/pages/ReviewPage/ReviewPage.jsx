@@ -55,7 +55,6 @@ function ReviewsPage() {
             <p className="review-text">{review.reviewText}</p>
             <div className="review-footer">
               <span>Книга ID: {review.bookId}</span>
-              <span>Пользователь ID: {review.userId}</span>
             </div>
           </div>
         ))}

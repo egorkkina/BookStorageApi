@@ -54,8 +54,9 @@ public class BookRepository(BookStorageDbContext context) : IBookRepository
             .ToList()!;
     }
     
-    public async Task<Guid> CreateBook(Book book, List<Author>? authors)
+    public async Task<Guid> CreateBook(Book book)
     {
+        var authors = book.Authors;
         var bookEntity = new BookEntity
         {
             Id = book.Id,
